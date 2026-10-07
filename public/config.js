@@ -38,13 +38,9 @@ window.WEDDING_CONFIG = {
 
   // ---- Photos ---------------------------------------------------------
   heroImage: "images/couple.png", // main portrait (4:5 portrait works best)
-  // "A glimpse of us" swipeable carousel
-  gallery: [
-    { src: "images/gallery-5.png", caption: "Every road led to you" },
-    { src: "images/gallery-1.png", caption: "Two hearts, one promise" },
-    { src: "images/gallery-2.png", caption: "Hand in hand" },
-    { src: "images/gallery-4.png", caption: "Golden moments" },
-  ],
+  // "A glimpse of us" swipeable carousel — empty list hides the section (and its admin uploads)
+  // e.g. [{ src: "images/gallery-1.png", caption: "Two hearts, one promise" }]
+  gallery: [],
   // "Our moments" photo grid (any number of photos)
   moments: [
     "images/gallery-3.png",

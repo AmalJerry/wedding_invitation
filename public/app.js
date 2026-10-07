@@ -272,6 +272,9 @@
   const msg = encodeURIComponent((guest ? `${C.rsvp.message} — ${guest}` : C.rsvp?.message) || "");
   $("#wa").href = `https://wa.me/${num}?text=${msg}`;
 
+  // ---------- Number only the visible sections (01, 02, …) so hidden ones leave no gap ----------
+  $$(".sec-num").filter((n) => !n.closest("section").hidden).forEach((n, i) => (n.textContent = String(i + 1).padStart(2, "0")));
+
   // ---------- Dock: hide links for hidden sections, highlight current ----------
   const links = $$(".dock a");
   links.forEach((a) => { const s = $(a.getAttribute("href")); if (!s || s.hidden) a.hidden = true; });

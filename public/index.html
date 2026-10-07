@@ -200,7 +200,7 @@
       const C = window.WEDDING_CONFIG;
       if (u.hero) C.heroImage = u.hero;
       if (u.venue) C.venue.image = u.venue;
-      if (u.gallery && u.gallery.length) C.gallery = u.gallery.map((src, i) => ({ src, caption: (C.gallery[i] || {}).caption || "" }));
+      if ((C.gallery || []).length && u.gallery && u.gallery.length) C.gallery = u.gallery.map((src, i) => ({ src, caption: (C.gallery[i] || {}).caption || "" }));
       if (u.moments && u.moments.length) C.moments = u.moments;
       const s = document.createElement("script"); s.src = "/app.js"; document.body.append(s);
     });
