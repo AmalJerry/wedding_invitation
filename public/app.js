@@ -88,7 +88,6 @@
     env.classList.add("open");
     document.body.classList.remove("locked");
     if (C.music) playMusic();
-    startPetals();
     setTimeout(watch, 500);
     setTimeout(() => env.classList.add("gone"), 1400);
   };
@@ -142,7 +141,6 @@
   const revealDate = () => {
     if (card.classList.contains("done")) return;
     card.classList.add("done");
-    burst(card);
   };
   cv.addEventListener("pointerdown", (e) => { scratching = true; last = null; cv.setPointerCapture(e.pointerId); scratchAt(e); });
   cv.addEventListener("pointermove", (e) => scratching && scratchAt(e));
@@ -286,48 +284,4 @@
     { rootMargin: "-45% 0px -50% 0px" }
   );
   $$("main > section").forEach((s) => spy.observe(s));
-
-  // ---------- Petals ----------
-  const pc = $("#petals"), px = pc.getContext("2d");
-  let petals = [], running = false;
-  const size = () => { pc.width = innerWidth * devicePixelRatio; pc.height = innerHeight * devicePixelRatio; };
-  addEventListener("resize", size);
-  const colors = ["#f3c9c9", "#efd9a6", "#ffffff", "#e7a9a1"];
-  const mk = (top) => ({
-    x: Math.random() * innerWidth, y: top ? -20 : Math.random() * innerHeight,
-    r: 5 + Math.random() * 6, vy: 0.4 + Math.random() * 0.8, vx: Math.random() - 0.5,
-    a: Math.random() * 6.28, va: (Math.random() - 0.5) * 0.04, c: colors[(Math.random() * colors.length) | 0],
-    sway: Math.random() * 6.28,
-  });
-  function startPetals() {
-    if (reduced || running) return;
-    running = true; size();
-    petals = Array.from({ length: innerWidth < 600 ? 16 : 26 }, () => mk(false));
-    (function frame() {
-      px.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-      px.clearRect(0, 0, innerWidth, innerHeight);
-      for (const p of petals) {
-        p.sway += 0.02; if (p.vy < 0.5) p.vy += 0.06; p.vx *= 0.99; p.y += p.vy; p.x += p.vx + Math.sin(p.sway) * 0.4; p.a += p.va;
-        if (p.y > innerHeight + 20) Object.assign(p, mk(true));
-        px.save(); px.translate(p.x, p.y); px.rotate(p.a);
-        px.globalAlpha = 0.55; px.fillStyle = p.c;
-        px.beginPath(); px.ellipse(0, 0, p.r, p.r * 0.55, 0, 0, 6.28); px.fill();
-        px.restore();
-      }
-      requestAnimationFrame(frame);
-    })();
-  }
-
-  // Little celebration burst when the date is revealed
-  function burst(el) {
-    if (reduced) return;
-    const r = el.getBoundingClientRect();
-    for (let i = 0; i < 24; i++) {
-      const p = mk(false);
-      p.x = r.left + r.width / 2; p.y = r.top + r.height / 2;
-      p.vx = (Math.random() - 0.5) * 6; p.vy = -Math.random() * 4 - 1;
-      petals.push(p);
-    }
-    setTimeout(() => (petals = petals.slice(0, innerWidth < 600 ? 16 : 26)), 6000);
-  }
 })();

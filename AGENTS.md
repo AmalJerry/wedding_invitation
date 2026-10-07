@@ -6,7 +6,7 @@ A static, configurable wedding invitation site. No framework and no build step: 
 ## Layout
 - `public/config.js` — the **only** file non-developers should need to edit. Defines `window.WEDDING_CONFIG` (couple, dates, events, venue, photos, RSVP, music, theme).
 - `public/index.html` — section skeleton. Text slots use `data-*` attributes (e.g. `data-groom`, `data-long-date`) that `app.js` fills from config.
-- `public/app.js` — one IIFE that renders everything: envelope intro, scratch-to-reveal canvas, countdown, carousel, events, venue map, moments grid, lightbox, WhatsApp/calendar links, dock scroll-spy and falling petals.
+- `public/app.js` — one IIFE that renders everything: envelope intro, scratch-to-reveal canvas, countdown, carousel, events, venue map, moments grid, lightbox, WhatsApp/calendar links and dock scroll-spy.
 - `public/styles.css` — all styling; theme colours are CSS variables (`--gold`, `--deep`, `--paper`) overridden from `config.theme`.
 - `public/images/` — photos. Shipped images are AI-generated placeholders meant to be replaced with the couple's photos.
 
