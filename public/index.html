@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Wedding Invitation</title>
+  <meta name="description" content="You're invited to our wedding celebration." />
+  <meta name="theme-color" content="#6b1d2a" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="You're Invited ❤" />
+  <meta property="og:image" content="/images/couple.png" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💍</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Great+Vibes&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="/config.js"></script>
+</head>
+<body class="locked">
+  <!-- ============ ENVELOPE INTRO ============ -->
+  <div id="envelope" class="envelope" role="button" tabindex="0" aria-label="Open invitation">
+    <div class="env-inner">
+      <p class="env-guest" data-guest hidden></p>
+      <p class="eyebrow">You are cordially invited</p>
+      <h1 class="env-names"><span data-groom></span><em>&amp;</em><span data-bride></span></h1>
+      <div class="seal"><span data-monogram></span></div>
+      <p class="tap">Tap to open</p>
+    </div>
+    <div class="flap flap-l"></div>
+    <div class="flap flap-r"></div>
+  </div>
+
+  <canvas id="petals" aria-hidden="true"></canvas>
+
+  <button id="musicBtn" class="music-btn" aria-label="Play or pause music" hidden>
+    <span class="bars"><i></i><i></i><i></i><i></i></span>
+  </button>
+
+  <main>
+    <!-- ============ HERO ============ -->
+    <section id="home" class="hero">
+      <div class="hero-text">
+        <p class="eyebrow reveal" data-intro></p>
+        <div class="couple">
+          <div class="person reveal">
+            <h2 class="script" data-groom></h2>
+            <p class="family" data-groom-family></p>
+          </div>
+          <div class="amp reveal">&amp;</div>
+          <div class="person reveal">
+            <h2 class="script" data-bride></h2>
+            <p class="family" data-bride-family></p>
+          </div>
+        </div>
+        <p class="lead reveal" data-invitation></p>
+        <p class="hero-date reveal"><span class="hero-date-label">Reception</span><span data-short-date></span></p>
+        <p class="hero-note reveal" data-wedding-note></p>
+      </div>
+      <figure class="arch reveal">
+        <img data-hero alt="The couple" />
+      </figure>
+    </section>
+
+    <!-- ============ DATE REVEAL ============ -->
+    <section id="date" class="section">
+      <header class="sec-head reveal">
+        <span class="sec-num">01</span>
+        <h3>Save the Date</h3>
+        <div class="divider"><span>❦</span></div>
+        <p>Scratch the golden card to reveal our day</p>
+      </header>
+      <div class="scratch reveal">
+        <div class="scratch-under">
+          <p class="weekday" data-weekday></p>
+          <p class="day" data-day></p>
+          <p class="month" data-month-year></p>
+          <p class="time" data-time-range></p>
+        </div>
+        <canvas id="scratch" aria-label="Scratch to reveal the date"></canvas>
+        <p class="scratch-hint">✦ scratch here ✦</p>
+      </div>
+      <div class="cal-actions reveal">
+        <a class="btn ghost" id="gcal" target="_blank" rel="noopener">＋ Add to Google Calendar</a>
+      </div>
+    </section>
+
+    <!-- ============ COUNTDOWN ============ -->
+    <section id="countdown" class="section dark">
+      <header class="sec-head reveal">
+        <span class="sec-num">02</span>
+        <h3>Counting Down to Forever</h3>
+        <div class="divider"><span>❦</span></div>
+      </header>
+      <div class="count reveal" id="count">
+        <div><b data-cd="d">0</b><span>Days</span></div>
+        <div><b data-cd="h">0</b><span>Hours</span></div>
+        <div><b data-cd="m">0</b><span>Minutes</span></div>
+        <div><b data-cd="s">0</b><span>Seconds</span></div>
+      </div>
+      <p class="count-done" id="countDone" hidden>Today is the day! ❤</p>
+    </section>
+
+    <!-- ============ GALLERY CAROUSEL ============ -->
+    <section id="gallery" class="section">
+      <header class="sec-head reveal">
+        <span class="sec-num">03</span>
+        <h3>A Glimpse of Us</h3>
+        <div class="divider"><span>❦</span></div>
+      </header>
+      <div class="carousel reveal">
+        <div class="track" id="track"></div>
+        <button class="nav prev" aria-label="Previous photo">‹</button>
+        <button class="nav next" aria-label="Next photo">›</button>
+      </div>
+      <div class="dots" id="dots"></div>
+    </section>
+
+    <!-- ============ EVENTS ============ -->
+    <section id="events" class="section tint">
+      <header class="sec-head reveal">
+        <span class="sec-num">04</span>
+        <h3>The Celebration</h3>
+        <div class="divider"><span>❦</span></div>
+        <p data-events-intro></p>
+      </header>
+      <div class="timeline" id="timeline"></div>
+    </section>
+
+    <!-- ============ VENUE ============ -->
+    <section id="venue" class="section">
+      <header class="sec-head reveal">
+        <span class="sec-num">05</span>
+        <h3>The Venue</h3>
+        <div class="divider"><span>❦</span></div>
+      </header>
+      <div class="venue-card reveal">
+        <div class="venue-img"><img data-venue-img alt="Venue" /></div>
+        <div class="venue-body">
+          <h4 data-venue-name></h4>
+          <p data-venue-address></p>
+          <div class="map"><iframe id="map" title="Venue map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+          <a class="btn" id="directions" target="_blank" rel="noopener">⌖ Get Directions</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MOMENTS GRID ============ -->
+    <section id="moments" class="section tint">
+      <header class="sec-head reveal">
+        <span class="sec-num">06</span>
+        <h3>Our Moments</h3>
+        <div class="divider"><span>❦</span></div>
+      </header>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <!-- ============ RSVP ============ -->
+    <section id="rsvp" class="section closing">
+      <header class="sec-head reveal">
+        <span class="sec-num">07</span>
+        <h3>With Love</h3>
+        <div class="divider"><span>❦</span></div>
+      </header>
+      <p class="closing-note reveal" data-closing></p>
+      <p class="closing-names script reveal"><span data-groom></span> &amp; <span data-bride></span></p>
+      <a class="btn wa reveal" id="wa" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.7.1-.2.3-.8.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.7.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3zM12 21.8c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4C2.7 15.6 2.2 13.8 2.2 12 2.2 6.6 6.6 2.2 12 2.2c2.6 0 5.1 1 6.9 2.9 1.8 1.8 2.9 4.3 2.9 6.9 0 5.4-4.4 9.8-9.8 9.8zm8.4-18.2C18.1 1.3 15.2.1 12 .1 5.5.1.1 5.5.1 12c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.7c1.7.9 3.7 1.4 5.7 1.4 6.5 0 11.9-5.3 11.9-11.9 0-3.2-1.2-6.1-3.5-8.4z"/></svg>
+        <span data-rsvp-button>Yes, I'll be there!</span>
+      </a>
+      <p class="rsvp-note reveal" data-rsvp-note></p>
+      <p class="deadline reveal" data-deadline></p>
+      <p class="footer-date" data-dot-date></p>
+    </section>
+  </main>
+
+  <!-- ============ BOTTOM NAV ============ -->
+  <nav class="dock" aria-label="Sections">
+    <a href="#home" title="Home" aria-label="Home">♥</a>
+    <a href="#date" title="Date" aria-label="Date"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/></svg></a>
+    <a href="#countdown" title="Countdown" aria-label="Countdown"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM12 9v4l2.5 2M10 2h4"/></svg></a>
+    <a href="#gallery" title="Gallery" aria-label="Gallery"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M15.5 9.5h.01"/></svg></a>
+    <a href="#events" title="Events" aria-label="Events"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg></a>
+    <a href="#venue" title="Venue" aria-label="Venue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg></a>
+    <a href="#moments" title="Moments" aria-label="Moments"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg></a>
+    <a href="#rsvp" title="RSVP" aria-label="RSVP"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zM3 7l9 6 9-6"/></svg></a>
+  </nav>
+
+  <!-- ============ LIGHTBOX ============ -->
+  <div class="lightbox" id="lightbox" hidden>
+    <button class="lb-close" aria-label="Close">×</button>
+    <button class="lb-nav lb-prev" aria-label="Previous">‹</button>
+    <img id="lbImg" alt="" />
+    <button class="lb-nav lb-next" aria-label="Next">›</button>
+  </div>
+
+  <audio id="music" loop preload="none"></audio>
+  <script>
+    // Photos uploaded via /admin.html override the ones in config.js
+    fetch("/api/images").then((r) => (r.ok ? r.json() : {})).catch(() => ({})).then((u) => {
+      const C = window.WEDDING_CONFIG;
+      if (u.hero) C.heroImage = u.hero;
+      if (u.venue) C.venue.image = u.venue;
+      if (u.gallery && u.gallery.length) C.gallery = u.gallery.map((src, i) => ({ src, caption: (C.gallery[i] || {}).caption || "" }));
+      if (u.moments && u.moments.length) C.moments = u.moments;
+      const s = document.createElement("script"); s.src = "/app.js"; document.body.append(s);
+    });
+  </script>
+</body>
+</html>
