@@ -24,8 +24,12 @@ export default async (req) => {
   if (req.method === "GET") return Response.json(list, { headers: { "Cache-Control": "no-store" } });
 
   const form = await req.formData();
-  if (!process.env.ADMIN_PASSWORD || form.get("password") !== process.env.ADMIN_PASSWORD)
-    return new Response("Wrong password (set ADMIN_PASSWORD in Netlify environment variables)", { status: 401 });
+  // read at request time; trim so stray spaces/newlines (env UI or phone keyboards) don't break the match
+  const expected = String(globalThis.Netlify?.env.get("ADMIN_PASSWORD") ?? process.env.ADMIN_PASSWORD ?? "").trim();
+  if (!expected)
+    return new Response("ADMIN_PASSWORD is not set for Functions. Add it in Netlify environment variables, then redeploy.", { status: 500 });
+  if (String(form.get("password") ?? "").trim() !== expected)
+    return new Response("Wrong password", { status: 401 });
   const section = form.get("section");
   if (!SECTIONS.includes(section)) return new Response("Unknown section", { status: 400 });
 
