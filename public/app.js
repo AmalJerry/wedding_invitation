@@ -11,6 +11,8 @@
   const setImg = (img, src, w) => {
     img.src = cdn(src, w);
     img.onerror = () => { img.onerror = null; img.src = "/" + src.replace(/^\//, ""); };
+    // photos are shown whole (object-fit: contain); the frame behind gets a blurred copy to fill the spare space
+    img.onload = () => img.parentElement && img.parentElement.style.setProperty("--bg", `url("${img.currentSrc || img.src}")`);
   };
 
   // ---------- Theme & text ----------
