@@ -33,6 +33,8 @@ window.WEDDING_CONFIG = {
   invitationLine: "request the honour of your presence as we celebrate our wedding reception",
   // Small line under the hero date, e.g. to mention the wedding ceremony
   weddingNote: "Following our wedding at Guruvayur Temple on 1st November",
+  // Hint printed on the gold scratch card in "Save the Date" ("" hides it)
+  scratchHint: "Scratch Here",
   closingNote:
     "Your presence will make our celebration complete. We can't wait to share this joyful evening with you.",
 
