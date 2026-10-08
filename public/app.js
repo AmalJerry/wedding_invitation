@@ -4,16 +4,10 @@
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const tz = C.timeZone || "Asia/Kolkata";
-
-  // ---------- Images via Netlify Image CDN (falls back to the original) ----------
-  const cdn = (src, w) =>
-    /^https?:/.test(src) ? src : `/.netlify/images?url=${encodeURIComponent("/" + src.replace(/^\//, ""))}&w=${w}&fm=webp&q=78`;
-  const setImg = (img, src, w) => {
-    img.src = cdn(src, w);
-    img.onerror = () => { img.onerror = null; img.src = "/" + src.replace(/^\//, ""); };
-    // photos are shown whole (object-fit: contain); the frame behind gets a blurred copy to fill the spare space
-    img.onload = () => img.parentElement && img.parentElement.style.setProperty("--bg", `url("${img.currentSrc || img.src}")`);
-  };
+  const photos = window.WEDDING_PHOTOS;
+  const uploadsReady = photos.load().catch(() => ({}));
+  let photoMetadata = C.imageMeta || {};
+  const setImg = (image, source, width, options = {}) => photos.setImg(image, source, width, { metadata: photoMetadata, ...options });
 
   // ---------- Theme & text ----------
   const root = document.documentElement.style;
@@ -21,7 +15,9 @@
     if (C.theme.accent) root.setProperty("--gold", C.theme.accent);
     if (C.theme.deep) root.setProperty("--deep", C.theme.deep);
     if (C.theme.paper) root.setProperty("--paper", C.theme.paper);
+    if (C.theme.rose) root.setProperty("--rose", C.theme.rose);
   }
+  $("meta[name='theme-color']").content = C.theme?.deep || "#284d40";
 
   const start = new Date(C.start);
   const end = new Date(C.end || C.start);
@@ -59,27 +55,31 @@
   const guest = new URLSearchParams(location.search).get("to");
   if (guest) { const g = $("[data-guest]"); g.textContent = `Dear ${guest},`; g.hidden = false; }
 
-  setImg($("[data-hero]"), C.heroImage, 840);
-  setImg($("[data-venue-img]"), C.venue.image, 1100);
-
   // ---------- Envelope + music ----------
   const env = $("#envelope");
   const audio = $("#music");
   const musicBtn = $("#musicBtn");
+  const main = $("main");
+  const dock = $(".dock");
+  main.inert = true;
+  dock.inert = true;
+  let musicFade;
   if (C.music) {
     audio.src = C.music;
     musicBtn.hidden = false;
     musicBtn.onclick = () => (audio.paused ? playMusic() : audio.pause());
-    audio.onplay = () => musicBtn.classList.add("playing");
-    audio.onpause = () => musicBtn.classList.remove("playing");
+    audio.onplay = () => { musicBtn.classList.add("playing"); musicBtn.setAttribute("aria-label", "Pause music"); };
+    audio.onpause = () => { clearInterval(musicFade); musicBtn.classList.remove("playing"); musicBtn.setAttribute("aria-label", "Play music"); };
+    audio.onerror = () => { clearInterval(musicFade); musicBtn.hidden = true; };
   }
   // Soft fade-in so the piano never startles anyone
   function playMusic() {
+    clearInterval(musicFade);
     audio.volume = 0;
     audio.play().then(() => {
-      const fade = setInterval(() => {
+      musicFade = setInterval(() => {
         audio.volume = Math.min(0.55, audio.volume + 0.03);
-        if (audio.volume >= 0.55) clearInterval(fade);
+        if (audio.volume >= 0.55) clearInterval(musicFade);
       }, 120);
     }).catch(() => {});
   }
@@ -87,12 +87,13 @@
     if (env.classList.contains("open")) return;
     env.classList.add("open");
     document.body.classList.remove("locked");
+    main.inert = false;
+    dock.inert = false;
     if (C.music) playMusic();
-    setTimeout(watch, 500);
-    setTimeout(() => env.classList.add("gone"), 1400);
+    watch();
+    setTimeout(() => { env.classList.add("gone"); main.focus({ preventScroll: true }); }, reduced ? 0 : 700);
   };
-  env.addEventListener("click", open);
-  env.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && open());
+  $(".envelope-open").addEventListener("click", open);
 
   // ---------- Reveal on scroll ----------
   const io = new IntersectionObserver(
@@ -104,19 +105,17 @@
   // ---------- Scratch card ----------
   const card = $(".scratch");
   const cv = $("#scratch");
+  const revealButton = $("#revealDate");
   const ctx = cv.getContext("2d", { willReadFrequently: true });
   const paintScratch = () => {
+    if (card.classList.contains("done") || !ctx) return;
     const r = cv.getBoundingClientRect();
-    const dpr = devicePixelRatio || 1;
+    const dpr = Math.min(devicePixelRatio || 1, 2);
     cv.width = r.width * dpr; cv.height = r.height * dpr;
     ctx.scale(dpr, dpr);
     const g = ctx.createLinearGradient(0, 0, r.width, r.height);
     g.addColorStop(0, "#c9a45c"); g.addColorStop(0.45, "#f1dca4"); g.addColorStop(0.55, "#d9b66e"); g.addColorStop(1, "#9c7633");
     ctx.fillStyle = g; ctx.fillRect(0, 0, r.width, r.height);
-    for (let i = 0; i < 90; i++) {
-      ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.5})`;
-      ctx.beginPath(); ctx.arc(Math.random() * r.width, Math.random() * r.height, Math.random() * 1.6, 0, 7); ctx.fill();
-    }
     ctx.fillStyle = "rgba(255,255,255,.95)";
     ctx.font = `400 ${Math.round(r.width / 7)}px "Great Vibes", cursive`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -141,14 +140,20 @@
   const revealDate = () => {
     if (card.classList.contains("done")) return;
     card.classList.add("done");
+    revealButton.setAttribute("aria-pressed", "true");
+    revealButton.disabled = true;
+    $("#gcal").focus({ preventScroll: true });
   };
   cv.addEventListener("pointerdown", (e) => { scratching = true; last = null; cv.setPointerCapture(e.pointerId); scratchAt(e); });
   cv.addEventListener("pointermove", (e) => scratching && scratchAt(e));
   cv.addEventListener("pointerup", () => { scratching = false; checkCleared(); });
-  document.fonts.ready.then(paintScratch);
+  cv.addEventListener("pointercancel", () => { scratching = false; last = null; });
+  revealButton.addEventListener("click", (event) => { if (event.detail === 0) revealDate(); });
+  new ResizeObserver(paintScratch).observe(card);
+  document.fonts.ready.then(paintScratch).catch(() => {});
 
   // ---------- Calendar ----------
-  const utc = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const utc = (date) => date.toISOString().slice(0, 19).replace(/[-:]/g, "") + "Z";
   const mainEvent = (C.events || []).find((e) => e.date === `${yyyy}-${mm}-${dd}`);
   const evTitle = `${C.groom.name} & ${C.bride.name} — ${mainEvent?.title || "Wedding"}`;
   const where = [C.venue.name, C.venue.address].filter(Boolean).join(", ");
@@ -173,60 +178,52 @@
 
   // ---------- Lightbox ----------
   const lb = $("#lightbox"), lbImg = $("#lbImg");
-  let lbList = [], lbIdx = 0;
-  const showLb = () => setImg(lbImg, lbList[lbIdx], 1600);
-  const openLb = (list, i) => { lbList = list; lbIdx = i; showLb(); lb.hidden = false; };
+  let lbList = [], lbIdx = 0, lastFocus;
+  const showLb = () => {
+    lbImg.alt = photos.describe(lbList[lbIdx], photoMetadata).alt || `Wedding photo ${lbIdx + 1} of ${lbList.length}`;
+    setImg(lbImg, lbList[lbIdx], 1800, { eager: true, frame: lbImg, sizes: "100vw" });
+  };
+  const closeLb = () => {
+    lb.close();
+    lb.hidden = true;
+    document.body.classList.remove("viewing-photo");
+    main.inert = false;
+    dock.inert = false;
+    musicBtn.inert = false;
+    lastFocus?.focus({ preventScroll: true });
+  };
+  const openLb = (list, index) => {
+    lbList = list;
+    lbIdx = index;
+    lastFocus = document.activeElement;
+    lb.hidden = false;
+    lb.showModal();
+    document.body.classList.add("viewing-photo");
+    main.inert = true;
+    dock.inert = true;
+    musicBtn.inert = true;
+    $$(".lb-nav").forEach((button) => { button.hidden = list.length < 2; });
+    showLb();
+    $(".lb-close").focus();
+  };
   const stepLb = (d) => { lbIdx = (lbIdx + d + lbList.length) % lbList.length; showLb(); };
-  $(".lb-close").onclick = () => (lb.hidden = true);
+  $(".lb-close").onclick = closeLb;
   $(".lb-prev").onclick = () => stepLb(-1);
   $(".lb-next").onclick = () => stepLb(1);
-  lb.addEventListener("click", (e) => e.target === lb && (lb.hidden = true));
+  lb.addEventListener("click", (event) => { if (event.target === lb) closeLb(); });
+  lb.addEventListener("cancel", (event) => { event.preventDefault(); closeLb(); });
   addEventListener("keydown", (e) => {
     if (lb.hidden) return;
-    if (e.key === "Escape") lb.hidden = true;
+    if (e.key === "Escape") closeLb();
     if (e.key === "ArrowLeft") stepLb(-1);
     if (e.key === "ArrowRight") stepLb(1);
+    if (e.key === "Tab") {
+      const buttons = $$("button:not([hidden])", lb);
+      const next = (buttons.indexOf(document.activeElement) + (e.shiftKey ? -1 : 1) + buttons.length) % buttons.length;
+      e.preventDefault();
+      buttons[next].focus();
+    }
   });
-
-  // ---------- Carousel ----------
-  const gallery = (C.gallery || []).map((g) => (typeof g === "string" ? { src: g } : g));
-  const track = $("#track"), dots = $("#dots");
-  let idx = 0, timer;
-  gallery.forEach((g, i) => {
-    const fig = document.createElement("figure");
-    fig.className = "slide";
-    const img = new Image();
-    img.alt = g.caption || `Photo ${i + 1}`;
-    img.loading = i ? "lazy" : "eager";
-    setImg(img, g.src, 1400);
-    img.draggable = false;
-    img.onclick = () => !swiped && openLb(gallery.map((x) => x.src), i);
-    fig.append(img);
-    if (g.caption) { const c = document.createElement("figcaption"); c.textContent = g.caption; fig.append(c); }
-    track.append(fig);
-    const dot = document.createElement("button");
-    dot.setAttribute("aria-label", `Photo ${i + 1}`);
-    dot.onclick = () => go(i);
-    dots.append(dot);
-  });
-  const go = (i) => {
-    idx = (i + gallery.length) % gallery.length;
-    track.style.transform = `translateX(-${idx * 100}%)`;
-    $$("button", dots).forEach((d, j) => d.classList.toggle("on", j === idx));
-    clearTimeout(timer);
-    if (!reduced) timer = setTimeout(() => go(idx + 1), 5000);
-  };
-  $(".prev").onclick = () => go(idx - 1);
-  $(".next").onclick = () => go(idx + 1);
-  let sx = null, swiped = false;
-  track.addEventListener("pointerdown", (e) => (sx = e.clientX));
-  track.addEventListener("pointerup", (e) => {
-    if (sx === null) return;
-    const dx = e.clientX - sx; sx = null;
-    if (Math.abs(dx) > 40) { swiped = true; setTimeout(() => (swiped = false), 60); go(idx + (dx < 0 ? 1 : -1)); }
-  });
-  if (gallery.length) go(0); else $("#gallery").hidden = true;
-  if (gallery.length < 2) $$(".carousel .nav").forEach((b) => (b.hidden = true));
 
   // ---------- Events ----------
   const tl = $("#timeline");
@@ -243,39 +240,61 @@
     $(".ev-venue", el).textContent = ev.venue ? `at ${ev.venue}` : "";
     tl.append(el);
   });
+  $("#events").hidden = !(C.events || []).length;
 
   // ---------- Venue ----------
   const q = encodeURIComponent(C.venue.mapQuery || where);
-  $("#map").src = `https://maps.google.com/maps?q=${q}&z=15&output=embed`;
+  const mapObserver = new IntersectionObserver((entries) => {
+    if (!entries.some((entry) => entry.isIntersecting)) return;
+    if (where || C.venue.mapQuery) $("#map").src = `https://maps.google.com/maps?q=${q}&z=15&output=embed`;
+    else $(".map").hidden = true;
+    mapObserver.disconnect();
+  }, { rootMargin: "300px" });
+  mapObserver.observe($("#venue"));
   $("#directions").href = C.venue.directionsUrl || `https://www.google.com/maps/dir/?api=1&destination=${q}`;
+  $("#directions").hidden = !(where || C.venue.mapQuery || C.venue.directionsUrl);
 
   // ---------- Moments grid ----------
-  const moments = C.moments || [];
   const grid = $("#grid");
-  moments.forEach((src, i) => {
-    const b = document.createElement("button");
-    b.className = "reveal";
-    b.setAttribute("aria-label", `Open photo ${i + 1}`);
-    const img = new Image();
-    img.alt = ""; img.loading = "lazy";
-    setImg(img, src, 800);
-    b.append(img);
-    b.onclick = () => openLb(moments, i);
-    grid.append(b);
-  });
-  if (!moments.length) $("#moments").hidden = true;
+  const renderPhotos = (uploads) => {
+    photoMetadata = { ...C.imageMeta, ...uploads.metadata };
+    const hero = photos.sources(C, uploads, "hero")[0];
+    const venue = photos.sources(C, uploads, "venue")[0];
+    setImg($("[data-hero]"), hero, 1200, { eager: true, sizes: "(max-width: 850px) 90vw, 45vw" });
+    setImg($("[data-venue-img]"), venue, 1400);
+    $("#home").classList.toggle("no-photo", !hero);
+    $("#venue").hidden = !venue && !where && !C.venue.mapQuery;
+    const moments = photos.sources(C, uploads, "moments");
+    grid.replaceChildren();
+    moments.forEach((source, index) => {
+      const button = document.createElement("button");
+      button.className = "moment reveal";
+      button.setAttribute("aria-label", `Open photo ${index + 1}`);
+      const image = new Image();
+      image.alt = `Wedding moment ${index + 1}`;
+      button.append(image);
+      setImg(image, source, 1000, { sizes: "(max-width: 550px) 90vw, (max-width: 850px) 45vw, 30vw" });
+      button.onclick = () => openLb(moments, index);
+      grid.append(button);
+    });
+    $("#moments").hidden = !moments.length;
+    syncSections();
+    if (env.classList.contains("open")) watch();
+  };
 
   // ---------- RSVP ----------
   const num = (C.rsvp?.whatsappNumber || "").replace(/\D/g, "");
-  const msg = encodeURIComponent((guest ? `${C.rsvp.message} — ${guest}` : C.rsvp?.message) || "");
+  const msg = encodeURIComponent([C.rsvp?.message, guest].filter(Boolean).join(" — "));
   $("#wa").href = `https://wa.me/${num}?text=${msg}`;
+  $("#wa").hidden = !C.rsvp?.message;
 
   // ---------- Number only the visible sections (01, 02, …) so hidden ones leave no gap ----------
-  $$(".sec-num").filter((n) => !n.closest("section").hidden).forEach((n, i) => (n.textContent = String(i + 1).padStart(2, "0")));
-
   // ---------- Dock: hide links for hidden sections, highlight current ----------
   const links = $$(".dock a");
-  links.forEach((a) => { const s = $(a.getAttribute("href")); if (!s || s.hidden) a.hidden = true; });
+  const syncSections = () => {
+    $$(".sec-num").filter((number) => !number.closest("section").hidden).forEach((number, index) => (number.textContent = String(index + 1).padStart(2, "0")));
+    links.forEach((link) => { const section = $(link.getAttribute("href")); link.hidden = !section || section.hidden; });
+  };
   const spy = new IntersectionObserver(
     (entries) => entries.forEach((e) => {
       if (!e.isIntersecting) return;
@@ -284,4 +303,7 @@
     { rootMargin: "-45% 0px -50% 0px" }
   );
   $$("main > section").forEach((s) => spy.observe(s));
+  uploadsReady.then(renderPhotos);
+  syncSections();
+  if (new URLSearchParams(location.search).has("preview")) open();
 })();

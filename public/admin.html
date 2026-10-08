@@ -1,76 +1,111 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>Photos admin</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#284d40">
+  <title>Photo Library | Wedding Invitation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+  <script src="config.js" defer></script>
+  <script src="photos.js" defer></script>
+  <script src="admin.js" defer></script>
 </head>
 <body>
-<h1>Photos</h1>
-<p>Uploaded photos replace the default ones and are cropped automatically to fit each section.
-Hero & Venue: one photo (a new upload replaces it). Gallery & Moments: each upload is added; "Clear" goes back to the default photos.</p>
-<form id="f">
-  <p><label>Password <input type="password" name="password" required autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false"></label></p>
-  <p><label>Section
-    <select name="section">
-      <option value="hero">Hero (main portrait)</option>
-      <option value="gallery">Gallery (carousel)</option>
-      <option value="moments">Our moments (grid)</option>
-      <option value="venue">Venue</option>
-    </select></label></p>
-  <p><input type="file" name="file" accept="image/*" multiple></p>
-  <p><button name="go" value="upload">Upload</button> <button name="go" value="clear">Clear section</button></p>
-</form>
-<p id="msg"></p>
-<pre id="cur"></pre>
-<script>
-const f = document.getElementById("f"), msg = document.getElementById("msg"), cur = document.getElementById("cur");
-const show = (l) => (cur.textContent = "Current uploads:\n" + JSON.stringify(l, null, 2));
-fetch("/api/images").then((r) => r.json()).then(show).catch(() => {});
+  <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol>
+    <symbol id="icon-map" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 12h18M12 3v18"/></symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+    <symbol id="icon-external" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="icon-restore" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5"/></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M10 11v6M14 11v6"/></symbol>
+    <symbol id="icon-up" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7M12 19V5"/></symbol>
+    <symbol id="icon-down" viewBox="0 0 24 24"><path d="M12 5v14m7-7-7 7-7-7"/></symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24"><path d="m18 6-12 12M6 6l12 12"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+  </svg>
 
-// shrink big phone photos before upload (max 2000px, JPEG)
-const shrink = (file) => new Promise((ok) => {
-  const img = new Image();
-  img.onload = () => {
-    const s = Math.min(1, 2000 / Math.max(img.width, img.height));
-    const c = document.createElement("canvas");
-    c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
-    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-    c.toBlob((b) => ok(b || file), "image/jpeg", 0.85);
-  };
-  img.onerror = () => ok(file);
-  img.src = URL.createObjectURL(file);
-});
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <a class="brand" href="index.html?preview=1" target="_blank" rel="noopener">
+        <span class="brand-mark" id="monogram">W</span>
+        <span><strong>Wedding invitation</strong><span id="coupleNames" class="muted"></span></span>
+      </a>
+      <p class="nav-label">Photo sections</p>
+      <nav class="section-nav" aria-label="Photo sections">
+        <button type="button" data-section="hero" aria-pressed="true"><svg class="icon" aria-hidden="true"><use href="#icon-image"/></svg><span>Cover photo</span><span class="nav-count" data-count="hero">1</span></button>
+        <button type="button" data-section="venue" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-map"/></svg><span>Venue photo</span><span class="nav-count" data-count="venue">1</span></button>
+        <button type="button" data-section="moments" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-grid"/></svg><span>Our moments</span><span class="nav-count" data-count="moments">0</span></button>
+      </nav>
+      <div class="access-panel">
+        <form id="authForm">
+          <label for="password">Admin password</label>
+          <div class="password-field">
+            <input id="password" type="password" required autocomplete="current-password" autocapitalize="off" spellcheck="false">
+            <button id="togglePassword" class="icon-button" type="button" aria-label="Show password" title="Show password" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-eye"/></svg></button>
+          </div>
+          <button class="button primary full-width" id="unlockBtn" type="submit"><svg class="icon" aria-hidden="true"><use href="#icon-lock"/></svg>Unlock editing</button>
+        </form>
+        <div id="unlockedPanel" hidden>
+          <p class="access-state"><svg class="icon" aria-hidden="true"><use href="#icon-check"/></svg>Editing unlocked</p>
+          <button id="lockBtn" class="button secondary full-width" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-lock"/></svg>Lock editing</button>
+        </div>
+        <p class="storage-label">Netlify photo storage</p>
+      </div>
+    </aside>
 
-const send = async (extra) => {
-  const d = new FormData();
-  d.append("password", f.password.value);
-  d.append("section", f.section.value);
-  for (const [k, v] of Object.entries(extra)) d.append(k, v);
-  const r = await fetch("/api/images", { method: "POST", body: d });
-  if (!r.ok) throw new Error(await r.text());
-  show(await r.json());
-};
+    <main class="workspace">
+      <header class="workspace-header">
+        <div><p class="eyebrow">Your invitation</p><h1>Photo library</h1></div>
+        <a id="previewLink" class="button secondary" href="index.html?preview=1#home" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#icon-external"/></svg>Preview invitation</a>
+      </header>
 
-f.onsubmit = async (e) => {
-  e.preventDefault();
-  try {
-    if (e.submitter.value === "clear") {
-      if (!confirm("Remove uploaded photos from this section?")) return;
-      await send({ action: "clear" });
-    } else {
-      const files = [...f.file.files];
-      if (!files.length) return (msg.textContent = "Choose a photo first.");
-      for (const [i, file] of files.entries()) {
-        msg.textContent = `Uploading ${i + 1} / ${files.length}…`;
-        await send({ file: new File([await shrink(file)], "photo.jpg", { type: "image/jpeg" }) });
-      }
-      f.file.value = "";
-    }
-    msg.textContent = "Done ✔";
-  } catch (err) { msg.textContent = "Error: " + err.message; }
-};
-</script>
+      <output class="notice" id="notice" aria-live="polite" aria-atomic="true">
+        <span id="message">Loading saved photos...</span>
+        <button id="retryBtn" class="button text-button" type="button" hidden><svg class="icon" aria-hidden="true"><use href="#icon-restore"/></svg>Reload photos</button>
+      </output>
+
+      <section class="photo-workspace" aria-labelledby="sectionTitle">
+        <header class="section-header">
+          <div><h2 id="sectionTitle">Cover photo</h2><p id="sectionMeta" class="muted">Opening photo</p></div>
+          <div class="toolbar">
+            <button id="hideBtn" class="icon-button" type="button" data-edit aria-label="Hide section photos" title="Hide section photos"><svg class="icon" aria-hidden="true"><use href="#icon-trash"/></svg></button>
+            <button id="restoreBtn" class="button secondary" type="button" data-edit><svg class="icon" aria-hidden="true"><use href="#icon-restore"/></svg>Restore defaults</button>
+          </div>
+        </header>
+
+        <div class="upload-zone" id="dropZone">
+          <div class="upload-command"><svg class="upload-icon icon" aria-hidden="true"><use href="#icon-upload"/></svg><div><strong id="uploadTitle">New cover photo</strong><p class="muted">JPG, PNG or WebP &middot; Up to 20 MB per photo</p></div></div>
+          <button id="chooseBtn" class="button primary" type="button" data-edit><svg class="icon" aria-hidden="true"><use href="#icon-upload"/></svg><span id="chooseLabel">Choose photo</span></button>
+          <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose photos" hidden>
+        </div>
+
+        <section class="queue" id="queueSection" aria-labelledby="queueTitle" hidden>
+          <header class="queue-header"><h3 id="queueTitle">Ready to upload</h3><button id="clearQueueBtn" class="icon-button" type="button" aria-label="Clear selected photos" title="Clear selected photos"><svg class="icon" aria-hidden="true"><use href="#icon-x"/></svg></button></header>
+          <ol id="queueList" class="queue-list"></ol>
+          <div class="queue-footer"><p id="uploadProgressText" class="muted"></p><button id="uploadBtn" class="button primary" type="button" data-edit><svg class="icon" aria-hidden="true"><use href="#icon-upload"/></svg><span id="uploadLabel">Upload photo</span></button></div>
+          <progress id="progress" max="1" value="0" aria-label="Photo upload progress" hidden></progress>
+        </section>
+
+        <div class="library-header"><h3>On your invitation</h3><span id="photoCount" class="muted"></span></div>
+        <div id="photoList" class="photo-list"></div>
+        <div id="emptyState" class="empty-state" hidden><svg class="icon" aria-hidden="true"><use href="#icon-image"/></svg><h3>No photos in this section</h3><p class="muted">Hidden on your invitation</p></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="confirmDialog" class="confirm-dialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+    <form method="dialog">
+      <h2 id="confirmTitle">Confirm change</h2>
+      <p id="confirmMessage"></p>
+      <div class="dialog-actions"><button class="button secondary" value="cancel" autofocus>Cancel</button><button id="confirmAction" class="button danger" value="confirm">Confirm</button></div>
+    </form>
+  </dialog>
 </body>
 </html>

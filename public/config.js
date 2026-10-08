@@ -37,10 +37,17 @@ window.WEDDING_CONFIG = {
     "Your presence will make our celebration complete. We can't wait to share this joyful evening with you.",
 
   // ---- Photos ---------------------------------------------------------
-  heroImage: "images/couple.png", // main portrait (4:5 portrait works best)
-  // "A glimpse of us" swipeable carousel — empty list hides the section (and its admin uploads)
-  // e.g. [{ src: "images/gallery-1.png", caption: "Two hearts, one promise" }]
-  gallery: [],
+  heroImage: "images/couple.png",
+  imageMeta: {
+    "images/couple.png": { width: 928, height: 1152 },
+    "images/venue.png": { width: 1376, height: 768 },
+    "images/gallery-1.png": { width: 1408, height: 768 },
+    "images/gallery-2.png": { width: 1408, height: 768 },
+    "images/gallery-3.png": { width: 1408, height: 768 },
+    "images/gallery-4.png": { width: 1408, height: 768 },
+    "images/gallery-5.png": { width: 1408, height: 768 },
+    "images/gallery-6.png": { width: 1408, height: 768 },
+  },
   // "Our moments" photo grid (any number of photos)
   moments: [
     "images/gallery-3.png",
@@ -102,8 +109,9 @@ window.WEDDING_CONFIG = {
 
   // ---- Look & feel ----------------------------------------------------
   theme: {
-    accent: "#a8813a", // antique gold
-    deep: "#6b1d2a", // maroon
-    paper: "#fbf6ee", // ivory background
+    accent: "#896b3d",
+    deep: "#284d40",
+    paper: "#fcfdfb",
+    rose: "#925c6b",
   },
 };
