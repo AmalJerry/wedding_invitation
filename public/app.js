@@ -119,7 +119,14 @@
     ctx.fillStyle = "rgba(255,255,255,.95)";
     ctx.font = `400 ${Math.round(r.width / 7)}px "Great Vibes", cursive`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("Our Big Day", r.width / 2, r.height / 2 - 6);
+    const hint = C.scratchHint || "";
+    ctx.fillText("Our Big Day", r.width / 2, r.height / 2 - (hint ? 16 : 6));
+    if (hint) {
+      ctx.font = `500 ${Math.max(11, Math.round(r.width / 26))}px "Jost", system-ui, sans-serif`;
+      ctx.letterSpacing = "0.18em";
+      ctx.fillText(`✦ ${hint.toUpperCase()} ✦`, r.width / 2, r.height / 2 + r.width / 9);
+      ctx.letterSpacing = "0px";
+    }
     ctx.globalCompositeOperation = "destination-out";
   };
   let scratching = false, last = null, moves = 0;

@@ -24,7 +24,7 @@ Open `/admin.html` on your Netlify site. The library shows the photos currently 
 - **Hide photos:** hides all photos in the selected section.
 - **Restore defaults:** removes that section's uploaded overrides and restores the photos configured in `public/config.js`.
 
-Editing requires `ADMIN_PASSWORD`, configured in Netlify's environment variables with the **Functions** scope. Keep the existing password if it is already configured; otherwise add it and redeploy. The password is not stored in browser storage. Use Lock editing when finished.
+Editing requires `ADMIN_PASSWORD`, configured in Netlify's environment variables with the **Functions** scope. Keep the existing password if it is already configured; otherwise add it and redeploy. Functions only see variables that existed when the deploy was built, so any time `ADMIN_PASSWORD` is added or changed, trigger a new deploy (Deploys → Trigger deploy → Deploy project). If the admin shows "ADMIN_PASSWORD is not set for Functions", the live deploy predates the variable and needs a redeploy. The password is not stored in browser storage. Use Lock editing when finished.
 
 Select JPG, PNG or WebP files up to 20 MB each. Photos are previewed before upload, resized to at most 1920 pixels on their longest edge, and compressed in the browser. HEIC and other formats must be converted first. Uploads are saved immediately; there is no separate Publish button. The preview link opens the selected section of the invitation.
 
